@@ -1,5 +1,5 @@
 # Log Analyser
-Log Analyser is a Python pipeline that reads an SSH `auth.log` file, extracts the connection attempts with regular expressions, locates the source IPs with the ipinfo.io API, and stores everything in a MySQL database. It then displays a dashboard of the results: failed attempts per country, successful attempts per user, and failed attempts with an invalid user. It is intended for system administrators who want to spot brute-force attacks on an SSH server.
+Log Analyser is a Python pipeline that reads an SSH `auth.log` file, extracts the connection attempts with regular expressions, locates the source IPs with the ipinfo.io API, and stores everything in a PostgreSQL database. It then displays a dashboard of the results: failed attempts per country, successful attempts per user, and failed attempts with an invalid user. It is intended for system administrators who want to spot brute-force attacks on an SSH server.
 
 ## Features
 the pipeline step by step :
@@ -10,11 +10,11 @@ step 2 :
 step 3 :
    cleaning,validation and extraction
 step 4 :
-   pymysql,storage
+   psycopg2,storage
 step 5 :   
    serving ,ai,bi
 
-## Project structure
+
 ## Project structure
 
 log_analyser/
@@ -29,7 +29,7 @@ log_analyser/
 │   └── geolocation.py            # finds the country and city of an IP with ipinfo.io
 ├── data_storage/
 │   ├── __init__.py
-│   └── storage.py                # MySQL connection, table creation, inserts and dashboard queries
+│   └── storage.py                # PostgreSQL connection, table creation, inserts and dashboard queries
 ├── data_serving/
 │   ├── __init__.py
 │   └── dashboard.py              # matplotlib charts
@@ -43,10 +43,10 @@ log_analyser/
 ## Requirements
 
 - Python 3.12
-- XAMPP, with the MySQL (MariaDB) service running on `localhost:3306`
-- An existing MySQL database named `log_analyser`
+- PostgreSQL, with the service running on `localhost:5432`
+- An existing PostgreSQL database named `log_analyser`
 - Python packages:
-  - `pymysql` (MySQL connection)
+  - `psycopg2` (PostgreSQL connection)
   - `requests` (calls to the ipinfo.io API)
   - `matplotlib` (dashboard charts)
 - An internet connection, needed to locate IP addresses with ipinfo.io
@@ -58,7 +58,7 @@ Run from the project root:
 python main.py
 
 
-On the first run, the table is empty, so the logs are read, stored and located before the dashboard opens. On the next runs, the dashboard opens directly from the data already in MySQL.
+On the first run, the table is empty, so the logs are read, stored and located before the dashboard opens. On the next runs, the dashboard opens directly from the data already in PostgreSQL.
 
 To reload everything from the log files:
 

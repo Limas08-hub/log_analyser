@@ -50,7 +50,3 @@ def extract_from_row(row):
         result['attempts'] = int(repeated.group(1))
 
     return result
-
-
-if __name__ == '__main__':
-    print(extract_from_row('May 24 01:14:12 ns sshd[1351821]: message repeated 4 times: [ Failed password for root from 45.148.10.147 port 8868 ssh2]'))

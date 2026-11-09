@@ -11,7 +11,7 @@ connection = psycopg2.connect(
     host='localhost',
     port=5432,
     user='postgres',
-    password='123456',     # celui de l'installation de PostgreSQL
+    password='123456',    
     dbname='log_analyser',
     cursor_factory=psycopg2.extras.RealDictCursor
 )

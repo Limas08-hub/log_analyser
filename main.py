@@ -1,5 +1,5 @@
 import sys
-from data_storage.storage import *
+from data_storage.storage import connection, TABLE, create_table, count_logs, load
 from data_serving import dashboard
 
 if __name__ == '__main__':

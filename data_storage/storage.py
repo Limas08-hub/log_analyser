@@ -1,4 +1,5 @@
-import pymysql
+import psycopg2
+import psycopg2.extras
 from datetime import datetime
 from data_ingestion import raw
 from data_processing import extract_transform, geolocation
@@ -6,13 +7,13 @@ from data_processing import extract_transform, geolocation
 TABLE = 't_log'
 YEAR = 2026  # syslog lines have no year
 
-connection = pymysql.Connection(
+connection = psycopg2.connect(
     host='localhost',
-    port=3306,
-    user='root',
-    password='',
-    cursorclass=pymysql.cursors.DictCursor,
-    database='log_analyser'
+    port=5432,
+    user='postgres',
+    password='123456',     # celui de l'installation de PostgreSQL
+    dbname='log_analyser',
+    cursor_factory=psycopg2.extras.RealDictCursor
 )
 
 
@@ -20,14 +21,14 @@ def create_table(name):
     with connection.cursor() as cursor:
         try:
             cursor.execute('CREATE TABLE IF NOT EXISTS ' + name +
-                           ' (id int auto_increment primary key not null,'
-                           ' log_date datetime not null, hostname varchar(100),'
-                           ' service varchar(50), pid int, event_type varchar(50),'
-                           ' username varchar(100), ip varchar(45), port int,'
-                           ' attempts int not null default 1,'
-                           ' country varchar(10), city varchar(100), raw_line text)')
+                           ' (id SERIAL PRIMARY KEY,'
+                           ' log_date TIMESTAMP NOT NULL, hostname VARCHAR(100),'
+                           ' service VARCHAR(50), pid INT, event_type VARCHAR(50),'
+                           ' username VARCHAR(100), ip VARCHAR(45), port INT,'
+                           ' attempts INT NOT NULL DEFAULT 1,'
+                           ' country VARCHAR(10), city VARCHAR(100), raw_line TEXT)')
             connection.commit()
-        except pymysql.Error as e:
+        except psycopg2.Error as e:
             print(e)
             connection.rollback()
 
@@ -37,7 +38,7 @@ def clear_table(name):
         try:
             cursor.execute('TRUNCATE TABLE ' + name)
             connection.commit()
-        except pymysql.Error as e:
+        except psycopg2.Error as e:
             print(e)
             connection.rollback()
 
@@ -58,7 +59,7 @@ def load_all(table_name, logs):
                                ' username, ip, port, attempts, raw_line)'
                                ' VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);', logs)
             connection.commit()
-        except pymysql.Error as e:
+        except psycopg2.Error as e:
             print(e)
             connection.rollback()
 
@@ -69,7 +70,7 @@ def set_location(table_name, ip, country, city):
             cursor.execute('UPDATE ' + table_name +
                            ' SET country=%s, city=%s WHERE ip=%s', (country, city, ip))
             connection.commit()
-        except pymysql.Error as e:
+        except psycopg2.Error as e:
             print(e)
             connection.rollback()
 
@@ -79,8 +80,9 @@ def count_logs(table_name=TABLE):
         try:
             cursor.execute('SELECT COUNT(*) AS total FROM ' + table_name)
             return cursor.fetchone()['total']
-        except pymysql.Error as e:
+        except psycopg2.Error as e:
             print(e)
+            connection.rollback()
             return 0
 
 
@@ -97,8 +99,9 @@ def ips_to_locate(table_name, n=100):
             for row in cursor.fetchall():
                 if row['ip'] not in ips:
                     ips.append(row['ip'])
-        except pymysql.Error as e:
+        except psycopg2.Error as e:
             print(e)
+            connection.rollback()
     return ips
 
 
@@ -125,8 +128,9 @@ def failed_by_country(table_name):
                            " WHERE event_type='Failed password' AND country IS NOT NULL"
                            ' GROUP BY country ORDER BY total DESC')
             results = cursor.fetchall()
-        except pymysql.Error as e:
+        except psycopg2.Error as e:
             print(e)
+            connection.rollback()
     return results
 
 
@@ -137,8 +141,9 @@ def success_by_user(table_name):
             cursor.execute('SELECT username, SUM(attempts) AS total FROM ' + table_name +
                            " WHERE event_type='Accepted' GROUP BY username ORDER BY total DESC")
             results = cursor.fetchall()
-        except pymysql.Error as e:
+        except psycopg2.Error as e:
             print(e)
+            connection.rollback()
     return results
 
 
@@ -149,6 +154,7 @@ def failed_invalid_user(table_name):
             cursor.execute('SELECT username, SUM(attempts) AS total FROM ' + table_name +
                            " WHERE event_type='Invalid user' GROUP BY username ORDER BY total DESC")
             results = cursor.fetchall()
-        except pymysql.Error as e:
+        except psycopg2.Error as e:
             print(e)
+            connection.rollback()
     return results

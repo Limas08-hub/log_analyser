@@ -29,18 +29,35 @@ def draw(results, key, title, color, n=TOP):
     pit.gca().spines['right'].set_visible(False)
 
 
+def draw_donut(results, key, title, n=TOP):
+    results = results[:n]                      # keep only the top n
+    pit.title(title, fontsize=12, fontweight='bold')
+    if not results:
+        pit.text(0.5, 0.5, 'no data', ha='center')
+        pit.axis('off')
+        return
+    x = []
+    y = []
+    for row in results:
+        x.append(str(row[key]))
+        y.append(int(row['total']))
+
+    pit.pie(y, labels=x, startangle=90, wedgeprops=dict(width=0.4, edgecolor='white'))
+    pit.text(0, 0, str(sum(y)) + '\nattempts', ha='center', va='center', fontweight='bold')   # total in the center
+
+
 def graph_failed_by_country():
-    draw(failed_by_country(TABLE), 'country', 'Failed attempts by country (top 10)', '#e74c3c')
+    draw(failed_by_country(TABLE), 'country', 'Failed attempts by country (top 10)', '#1abc9c')
     pit.show()
 
 
 def graph_success_by_user():
-    draw(success_by_user(TABLE), 'username', 'Successful attempts by user', '#2ecc71')
+    draw(success_by_user(TABLE), 'username', 'Successful attempts by user', '#f39c12')
     pit.show()
 
 
 def graph_failed_invalid_user():
-    draw(failed_invalid_user(TABLE), 'username', 'Failed attempts with invalid user (top 10)', '#8e44ad')
+    draw_donut(failed_invalid_user(TABLE), 'username', 'Failed attempts with invalid user (top 10)')
     pit.show()
 
 
@@ -49,13 +66,13 @@ def dashboard():
     pit.suptitle('SSH log analyser', fontsize=16, fontweight='bold')
 
     pit.subplot(1, 3, 1)
-    draw(failed_by_country(TABLE), 'country', 'Failed attempts by country (top 10)', '#e74c3c')
+    draw(failed_by_country(TABLE), 'country', 'Failed attempts by country (top 10)', '#1abc9c')
 
     pit.subplot(1, 3, 2)
-    draw(success_by_user(TABLE), 'username', 'Successful attempts by user', '#2ecc71')
+    draw(success_by_user(TABLE), 'username', 'Successful attempts by user', '#f39c12')
 
     pit.subplot(1, 3, 3)
-    draw(failed_invalid_user(TABLE), 'username', 'Failed attempts with invalid user (top 10)', '#8e44ad')
+    draw_donut(failed_invalid_user(TABLE), 'username', 'Failed attempts with invalid user (top 10)')
 
     pit.tight_layout()
     pit.show()
